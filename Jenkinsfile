@@ -20,10 +20,10 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'gcp-service-account', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     sh '''
-                        echo "Authenticating with GCP"
-                        gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
-                        gcloud config set project $GKE_PROJECT_ID
-                        gcloud config set compute/zone $GKE_ZONE
+                        echo "Authenticating using ${GOOGLE_APPLICATION_CREDENTIALS}"
+                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                        gcloud config set project ${GKE_PROJECT_ID}
+                        gcloud config set compute/zone ${GKE_ZONE}
                     '''
                 }
             }
@@ -31,29 +31,20 @@ pipeline {
 
         stage('Configure kubectl') {
             steps {
-                sh '''
-                    echo "Getting GKE cluster credentials"
-                    gcloud container clusters get-credentials $GKE_CLUSTER_NAME
-                '''
+                sh 'gcloud container clusters get-credentials ${GKE_CLUSTER_NAME}'
             }
         }
 
         stage('Deploy to GKE') {
             steps {
-                sh '''
-                    echo "Applying Kubernetes manifests"
-                    kubectl apply -f aks-store-quickstart.yaml
-                '''
+                sh 'kubectl apply -f aks-store-quickstart.yaml'
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                sh '''
-                    echo "Checking deployment status"
-                    kubectl get pods
-                    kubectl get svc
-                '''
+                sh 'kubectl get pods'
+                sh 'kubectl get svc'
             }
         }
     }
